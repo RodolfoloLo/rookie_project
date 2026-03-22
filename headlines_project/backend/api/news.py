@@ -1,7 +1,8 @@
 from fastapi import APIRouter,Depends,Query,HTTPException
+from fastapi.encoders import jsonable_encoder
 from sqlalchemy.ext.asyncio import AsyncSession
 from ..config.db_config import get_database
-from ..crud import news,news_cache
+from ..crud import news
 
 #创建APIRouter实例
 
@@ -14,11 +15,11 @@ async def get_categories(
         limit:int = 100,
         db:AsyncSession = Depends(get_database)
 ):
-    categories = await news_cache.get_categories(db,skip,limit)
+    categories = await news.get_categories(db,skip,limit)
     return {
         "code":200,
         "message":"获取新闻分类成功",
-        "data":categories
+        "data":jsonable_encoder(categories)
     }
 
 @router.get("/list")
@@ -29,14 +30,14 @@ async def get_news_list(
         db:AsyncSession = Depends(get_database)
 ):
     offset = (page - 1) * page_size
-    news_list = await news_cache.get_news_list(db,category_id,offset,page_size)
+    news_list = await news.get_news_list(db,category_id,offset,page_size)
     total = await news.get_news_count(db,category_id)
     has_more = (offset+len(news_list)) < total
     return{
         "code":200,
         "message":"获取新闻列表成功",
         "data":{
-            "list":news_list,
+            "list":jsonable_encoder(news_list),
             "total":total,
             "hasMore":has_more
         }
