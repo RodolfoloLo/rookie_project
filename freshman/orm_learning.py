@@ -1,4 +1,5 @@
 from fastapi import FastAPI,Depends,HTTPException
+import os
 from sqlalchemy.ext.asyncio import create_async_engine, async_sessionmaker,AsyncSession
 from datetime import datetime
 from sqlalchemy import DateTime,func,String,Float,select
@@ -9,7 +10,10 @@ app=FastAPI()
 
 #chapter1   ORM~建表
 #1,创建异步引擎
-ASYNC_DATABASE_URL = "mysql+aiomysql://root:Nba082423@localhost:3306/PythonWeb_demo_db?charset=utf8"
+ASYNC_DATABASE_URL = os.getenv(
+    "ASYNC_DATABASE_URL",
+    "mysql+aiomysql://root:change_me@localhost:3306/PythonWeb_demo_db?charset=utf8",
+)
 async_engine = create_async_engine(
     ASYNC_DATABASE_URL,
     echo=True,#输出SQL日志

@@ -6,7 +6,7 @@
 // API基础URL配置
 export const apiConfig = {
   // 开发环境默认走本机后端，生产环境默认走同域反向代理
-  baseURL: import.meta.env.VITE_API_BASE_URL || (import.meta.env.PROD ? '/api' : 'http://127.0.0.1:8000'),
+  baseURL: import.meta.env.VITE_API_BASE_URL || (import.meta.env.PROD ? '' : 'http://127.0.0.1:8000'),
 }
 
 export const aiChatConfig = {
