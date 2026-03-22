@@ -12,12 +12,6 @@ export const apiConfig = {
 }
 
 export const aiChatConfig = {
-  // DashScope API地址
-  apiEndpoint: import.meta.env.VITE_AI_API_ENDPOINT || 'https://dashscope.aliyuncs.com/compatible-mode/v1/chat/completions',
-
-  // API Key 必须通过环境变量注入
-  apiKey: import.meta.env.VITE_DASHSCOPE_API_KEY || '',
-
-  // 使用的模型
+  // 前端只保留模型名称，API调用走后端代理
   model: import.meta.env.VITE_AI_MODEL || 'qwen3-max-preview'
 }
