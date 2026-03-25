@@ -2,7 +2,7 @@ from fastapi import APIRouter,Depends,Query,HTTPException
 from fastapi.encoders import jsonable_encoder
 from sqlalchemy.ext.asyncio import AsyncSession
 from ..config.db_config import get_database
-from ..crud import news
+from ..crud import news_cache as news
 
 #创建APIRouter实例
 
@@ -52,25 +52,23 @@ async def get_news_details(
     if not news_details:
         raise HTTPException(status_code=404,detail="新闻不存在")
 
-    views_result = await news.increase_news_views(db,news_details.id)
+    detail_id = news_details.id
+    detail_category_id = news_details.category_id
+
+    views_result = await news.increase_news_views(db,detail_id)
     if not views_result:
         raise HTTPException(status_code=500,detail="新闻不存在")
 
-    related_news = await news.get_related_news(db,news_details.id,news_details.category_id)
+    related_news = await news.get_related_news(db,detail_id,detail_category_id)
 
+    updated_views = news_details.views + 1
+    await news.update_cached_news_views(detail_id, updated_views)
+    response_data = news_details.model_dump(mode="json", by_alias=True)
+    response_data["views"] = updated_views
+    response_data["relatedNews"] = jsonable_encoder(related_news)
 
     return {
         "code":200,
         "message":"success",
-        "data":{
-            "id":news_details.id,
-            "title":news_details.title,
-            "content":news_details.content,
-            "image":news_details.image,
-            "author":news_details.author,
-            "publishTime":news_details.publish_time,
-            "categoryId":news_details.category_id,
-            "views":news_details.views,
-            "relatedNews":related_news
-        }
+        "data":response_data
     }

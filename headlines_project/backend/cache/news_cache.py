@@ -1,5 +1,3 @@
-from selectors import SelectSelector
-
 from ..config.cache_config import get_json_cache,set_cache
 from typing import Any, Optional
 
@@ -38,3 +36,34 @@ async def get_cached_news_list(
     category_part = category_id if category_id is not None else "all"
     key = f"{NEWS_LIST_PREFIX}{category_part}:{page}:{page_size}"
     return await get_json_cache(key)
+
+
+async def get_cached_news_detail(
+        news_id:int
+) -> Optional[dict[str,Any]]:
+    key = f"news_detail:{news_id}"
+    return await get_json_cache(key)
+
+async def cache_news_detail(
+        news_id:int,
+        news_detail:dict[str,Any],
+        expire:int = 300
+) -> bool:
+    key = f"news_detail:{news_id}"
+    return await set_cache(key,news_detail,expire)
+
+async def get_cached_related_news(
+        news_id:int,
+        category_id:int
+) -> Optional[list[dict[str,Any]]]:
+    key = f"related_news:{news_id}:{category_id}"
+    return await get_json_cache(key)
+
+async def cache_related_news(
+        news_id:int,
+        category_id:int,
+        related_news:list[dict[str,Any]],
+        expire:int = 1800
+) -> bool:
+    key = f"related_news:{news_id}:{category_id}"
+    return await set_cache(key,related_news,expire)

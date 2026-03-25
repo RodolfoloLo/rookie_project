@@ -31,11 +31,29 @@ services:
       - ./backend/.env
     environment:
       ASYNC_DATABASE_URL: mysql+aiomysql://${MYSQL_USER}:${MYSQL_PASSWORD}@db:3306/${MYSQL_DATABASE}?charset=utf8mb4
+      REDIS_HOST: redis
+      REDIS_PORT: 6379
+      REDIS_DB: 0
     depends_on:
       db:
         condition: service_healthy
+      redis:
+        condition: service_healthy
     ports:
       - "8000:8000"
+
+  redis:
+    image: redis:7-alpine
+    container_name: news_redis
+    restart: unless-stopped
+    command: ["redis-server", "--appendonly", "yes"]
+    volumes:
+      - redis_data:/data
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 12
 
   frontend:
     build:
@@ -50,3 +68,4 @@ services:
 
 volumes:
   mysql_data:
+  redis_data:

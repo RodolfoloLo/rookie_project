@@ -47,11 +47,16 @@
 
 <script setup>
 import { ref, onMounted, nextTick, watch } from 'vue';
+import { useRouter } from 'vue-router';
 import TabBar from '../components/TabBar.vue';
 import { showToast } from 'vant';
 import * as marked from 'marked';
 import DOMPurify from 'dompurify';
 import { apiConfig, aiChatConfig } from '../config/api';
+import { useUserStore } from '../store/user';
+
+const router = useRouter();
+const userStore = useUserStore();
 
 // 聊天消息
 const messages = ref([
@@ -74,6 +79,12 @@ const formatMessage = (content) => {
 // 发送消息
 const sendMessage = async () => {
   if (!userInput.value.trim() || isLoading.value) return;
+
+  if (!userStore.isLogin || !userStore.token) {
+    showToast('请先登录后再使用AI问答');
+    router.push('/login');
+    return;
+  }
   
   // 添加用户消息
   const userMessage = userInput.value.trim();
@@ -113,6 +124,7 @@ const fetchAIResponse = async (userMessage) => {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
+        'Authorization': userStore.token,
       },
       body: JSON.stringify({
         model: model.value,
@@ -122,6 +134,9 @@ const fetchAIResponse = async (userMessage) => {
 
     if (!response.ok) {
       const error = await response.json().catch(() => ({}));
+      if (response.status === 401) {
+        throw new Error('登录状态已失效，请重新登录');
+      }
       throw new Error(error.detail || error.message || error.error?.message || `HTTP error! status: ${response.status}`);
     }
 

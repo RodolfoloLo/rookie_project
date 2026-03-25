@@ -2,9 +2,10 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import select,func
 from ..models.news import Category,News
 from sqlalchemy import update
-from ..cache.news_cache import get_cached_categories,set_cached_categories,get_cached_news_list,set_cache_news_list
+from ..cache.news_cache import get_cached_categories,set_cached_categories,get_cached_news_list,set_cache_news_list,get_cached_news_detail,cache_news_detail,get_cached_related_news,cache_related_news
 from fastapi.encoders import jsonable_encoder
 from ..schemas.base import NewsItemBase
+from ..schemas.news import NewsDetailResponse, RelatedNewsResponse
 
 async def get_categories(
         db:AsyncSession,
@@ -54,17 +55,28 @@ async def get_news_count(
 ):
     stmt = select(func.count(News.id)).where(News.category_id == category_id)
     result = await db.execute(stmt)
-    news_list =  result.scalar_one()
+    return result.scalar_one()
 
-    return news_list
+
 
 async def get_news_details(
         db:AsyncSession,
         news_id:int
 ):
+    cached_news = await get_cached_news_detail(news_id)
+    if cached_news:
+        return NewsDetailResponse.model_validate(cached_news)
     stmt = select(News).where(News.id == news_id)
     result = await db.execute(stmt)
-    return result.scalar_one_or_none()
+    news =  result.scalar_one_or_none()
+    if news:
+        detail_model = NewsDetailResponse.model_validate(news)
+        await cache_news_detail(
+            news_id,
+            detail_model.model_dump(mode="json", by_alias=True, exclude={"related_news"}),
+        )
+        return detail_model
+    return None
 
 async def increase_news_views(
         db:AsyncSession,
@@ -75,23 +87,36 @@ async def increase_news_views(
     await db.commit()
     return result.rowcount>0#数据库更新操作时检查是否命中了数据
 
+
+async def update_cached_news_views(news_id: int, views: int):
+    cached_news = await get_cached_news_detail(news_id)
+    if not cached_news:
+        return
+    detail_model = NewsDetailResponse.model_validate(cached_news)
+    detail_model.views = views
+    await cache_news_detail(
+        news_id,
+        detail_model.model_dump(mode="json", by_alias=True, exclude={"related_news"}),
+    )
+
 async def get_related_news(
         db:AsyncSession,
         news_id:int,
         category_id:int,
         limit:int = 5
 ):
+    cached_related = await get_cached_related_news(news_id,category_id)
+    if cached_related:
+        return [RelatedNewsResponse.model_validate(item) for item in cached_related]
     stmt = select(News).where(News.category_id == category_id).where(News.id != news_id).order_by(News.views.desc(),News.publish_time.desc()).limit(limit)
     result = await db.execute(stmt)
     #result = result.scalars().all()
     related_news = result.scalars().all()
-    return [{
-        "id": news_details.id,
-        "title": news_details.title,
-        "content": news_details.content,
-        "image": news_details.image,
-        "author": news_details.author,
-        "publishTime": news_details.publish_time,
-        "categoryId": news_details.category_id,
-        "views": news_details.views
-    } for news_details in related_news]
+    if related_news:
+        related_data = [
+            RelatedNewsResponse.model_validate(item).model_dump(mode="json", by_alias=True)
+            for item in related_news
+        ]
+        await cache_related_news(news_id,category_id,related_data)
+        return [RelatedNewsResponse.model_validate(item) for item in related_data]
+    return []

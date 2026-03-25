@@ -2,9 +2,11 @@ import os
 from typing import List, Literal
 
 import httpx
-from fastapi import APIRouter, HTTPException
+from fastapi import APIRouter, Depends, HTTPException
 from pydantic import BaseModel, Field
 
+from ..models.users import User
+from ..utils.auth import get_current_user
 from ..utils.response import success_response
 
 
@@ -22,7 +24,7 @@ class ChatRequest(BaseModel):
 
 
 @router.post("/chat")
-async def chat(req: ChatRequest):
+async def chat(req: ChatRequest, user: User = Depends(get_current_user)):
     api_key = os.getenv("DASHSCOPE_API_KEY", "").strip()
     if not api_key:
         raise HTTPException(status_code=500, detail="AI服务未配置，请联系管理员")
