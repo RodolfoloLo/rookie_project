@@ -48,14 +48,14 @@ class News(Base) :
         Index( 'idx_publish_time' , 'publish_time' )
     )
 
-    id: Mapped[int] = mapped_column(Integer, primary_key=True, autoincrement=True, comment=" 新闻 ID")
-    title: Mapped[str] = mapped_column(String(255), nullable=False, comment=" 新闻标题 " )
-    description: Mapped[Optional[str]] = mapped_column(String(500), comment=" 新闻简介 " )
-    content: Mapped[str] = mapped_column(Text, nullable=False, comment=" 新 闻内容 " )
-    image: Mapped[Optional[str]] = mapped_column(String(255), comment=" 封 ⾯图⽚ URL")
-    author: Mapped[Optional[str]] = mapped_column(String(50), comment=" 作 者 " )
-    category_id: Mapped[int] = mapped_column(Integer, ForeignKey( 'news_category.id' ) , nullable=False, comment=" 分类 ID")
-    views: Mapped[int] = mapped_column(Integer, default=0, nullable=False, comment=" 浏览量 " )
-    publish_time: Mapped[datetime] = mapped_column(DateTime, default=datetime.now, comment=" 发布时间 " )
+    id: Mapped[int] = mapped_column(Integer, primary_key=True, autoincrement=True, comment="新闻ID")
+    title: Mapped[str] = mapped_column(String(255), nullable=False, comment="新闻标题")
+    description: Mapped[Optional[str]] = mapped_column(String(500), comment="新闻简介")
+    content: Mapped[str] = mapped_column(Text, nullable=False, comment="新闻内容")
+    image: Mapped[Optional[str]] = mapped_column(String(255), comment="封⾯图⽚URL")
+    author: Mapped[Optional[str]] = mapped_column(String(50), comment="作者")
+    category_id: Mapped[int] = mapped_column(Integer, ForeignKey('news_category.id') , nullable=False, comment="分类ID")
+    views: Mapped[int] = mapped_column(Integer, default=0, nullable=False, comment="浏览量")
+    publish_time: Mapped[datetime] = mapped_column(DateTime, default=datetime.now, comment="发布时间")
 
     def __repr__(self) : return f"<News(id={self.id}, title='{self.title}', views={self.views})>"

@@ -34,10 +34,11 @@ async def get_cached_news_list(
         page_size:int
 ):
     category_part = category_id if category_id is not None else "all"
-    key = f"{NEWS_LIST_PREFIX}{category_part}:{page}:{page_size}"
+    key = f"{NEWS_LIST_PREFIX}{category_part}:{page}:{page_size}"#"key怎么存的怎么取"
     return await get_json_cache(key)
 
-
+#->规定了函数的返回类型
+#Optional[dict[str,Any]]表示函数可能返回一个字典(键是字符串,值可以是任意类型),也可能返回None
 async def get_cached_news_detail(
         news_id:int
 ) -> Optional[dict[str,Any]]:

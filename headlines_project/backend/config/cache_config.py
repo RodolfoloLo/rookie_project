@@ -34,7 +34,7 @@ async def get_json_cache(key:str):
     try:
         data = await redis_client.get(key)
         if data:
-            return json.loads(data)
+            return json.loads(data)#将JSON字符串转换回Python对象(如列表或字典) 为什么?:因为我们存储到Redis中的数据是经过json.dumps()序列化成字符串的,所以读取时需要用json.loads()反序列化回原来的数据结构(如列表或字典)才能使用
         return None
     except Exception as e:
         print(f"获取JSON缓存失败:{e}")
@@ -48,7 +48,7 @@ async def set_cache(
 ):
     try:
         if isinstance(value,(list,dict)):
-            value = json.dumps(value,ensure_ascii=False)
+            value = json.dumps(value,ensure_ascii=False)#将Python对象转换为JSON字符串(因为Redis只支持字符串)  ensure_ascii=False可以让中文等非ASCII字符正常显示而不是被转义成\uXXXX的形式
         await redis_client.setex(key,expire,value)
         return True
     except Exception as e:
