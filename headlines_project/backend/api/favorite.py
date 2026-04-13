@@ -38,6 +38,8 @@ async def remove_favorite(
     result = await favorite.remove_news_favorite(db,user.id,news_id)
     if not result:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND,detail="收藏记录不存在")
+    #raise是处理错误的一张方法,HTTPException会被FastAPI捕获,在exception_handlers中找到对应的处理器函数,status_code会在JSONResponse中作为status_code.
+    #其实还有一种写法是在这里直接返回JSONResponse(status_code=404,content={"code":404,"message":"收藏记录不存在"})  但是使用HTTPException的好处是可以统一处理异常,比如在全局异常处理中记录日志,或者返回不同格式的错误响应等,而直接返回JSONResponse则需要在每个接口中处理错误,代码会比较冗余和分散
     return success_response(message="取消收藏成功")
 
 @router.get("/list")

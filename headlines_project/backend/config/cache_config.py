@@ -9,14 +9,14 @@ REDIS_DB = int(os.getenv("REDIS_DB", "0"))
 REDIS_PASSWORD = os.getenv("REDIS_PASSWORD", "")
 
 #创建Redis的连接对象
-redis_client = redis.Redis(
+redis_client = redis.Redis( #实例化一个Redis对象,可以创建多个独立实例(比如不同业务用不同客户端),底层同样维护线程池
     host = REDIS_HOST,
     port = REDIS_PORT,
     db = REDIS_DB,
     password = REDIS_PASSWORD or None,
     socket_timeout = 3,
     socket_connect_timeout = 3,
-    decode_responses = True#是否将字节数据解码为字符串
+    decode_responses = True#是否将字节数据解码为字符串(Redis默认返回字节数据,设置为True可以直接得到字符串,方便使用)
 )
 
 #设置 和 读取 (字符串)

@@ -1,42 +1,42 @@
 services:
   db:
-    image: mysql:8.0
-    container_name: news_db
-    restart: unless-stopped
-    command: --default-authentication-plugin=mysql_native_password --character-set-server=utf8mb4 --collation-server=utf8mb4_unicode_ci
-    environment:
+    image: mysql:8.0 #使用现成的MySQL 8.0镜像 哪里现成的?: Docker Hub
+    container_name: news_db #容器名称
+    restart: unless-stopped #除非手动停止，否则总是重启
+    command: --default-authentication-plugin=mysql_native_password --character-set-server=utf8mb4 --collation-server=utf8mb4_unicode_ci #设置MySQL的默认认证插件和字符集
+    environment: #环境变量(从.env文件中读取)
       MYSQL_DATABASE: ${MYSQL_DATABASE}
       MYSQL_USER: ${MYSQL_USER}
       MYSQL_PASSWORD: ${MYSQL_PASSWORD}
       MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD}
       TZ: Asia/Shanghai
     ports:
-      - "127.0.0.1:3306:3306"
-    volumes:
-      - mysql_data:/var/lib/mysql
-      - ./backend/database.sql:/docker-entrypoint-initdb.d/01-init.sql:ro
-    healthcheck:
-      test: ["CMD-SHELL", "mysqladmin ping -h localhost -uroot -p$$MYSQL_ROOT_PASSWORD"]
+      - "127.0.0.1:3306:3306" #只允许本地访问MySQL
+    volumes: #数据卷挂载
+      - mysql_data:/var/lib/mysql #持久化MySQL数据 /var是用来存放可变数据的目录，lib/mysql是MySQL的数据目录
+      - ./backend/database.sql:/docker-entrypoint-initdb.d/01-init.sql:ro #在容器启动时执行SQL脚本初始化数据库，设置为只读
+    healthcheck: #健康检查，确保MySQL服务已启动并可用(如果健康,docker ps命令中会显示healthy状态)
+      test: ["CMD-SHELL", "mysqladmin ping -h localhost -uroot -p$$MYSQL_ROOT_PASSWORD"] #使用环境变量中的root密码进行健康检查
       interval: 10s
       timeout: 5s
       retries: 12
 
   backend:
-    build:
-      context: .
+    build: #不是用现成镜像,而是根据Dockerfile构建镜像
+      context: . #构建上下文为当前目录,上下文是Docker构建过程中可访问的文件范围,这里设置为当前目录,表示Dockerfile和相关文件都在当前目录下
       dockerfile: backend/Dockerfile
       args:
-        PIP_INDEX_URL: ${PIP_INDEX_URL:-https://pypi.org/simple}
+        PIP_INDEX_URL: ${PIP_INDEX_URL:-https://pypi.org/simple} #设置pip的索引URL，如果未设置则使用默认的PyPI源 pypi.org是Python包的官方仓库，simple是PyPI的简单API端点，提供了包的基本信息和下载链接
     container_name: news_backend
     restart: unless-stopped
     env_file:
       - ./backend/.env
     environment:
-      ASYNC_DATABASE_URL: mysql+aiomysql://${MYSQL_USER}:${MYSQL_PASSWORD}@db:3306/${MYSQL_DATABASE}?charset=utf8mb4
+      ASYNC_DATABASE_URL: mysql+aiomysql://${MYSQL_USER}:${MYSQL_PASSWORD}@db:3306/${MYSQL_DATABASE}?charset=utf8mb4 #设置异步数据库URL
       REDIS_HOST: redis
       REDIS_PORT: 6379
       REDIS_DB: 0
-    depends_on:
+    depends_on: #依赖关系，确保在启动backend之前，db和redis服务已经健康检查通过
       db:
         condition: service_healthy
       redis:
@@ -45,14 +45,14 @@ services:
       - "8000:8000"
 
   redis:
-    image: redis:7-alpine
+    image: redis:7-alpine #使用现成的Redis 7 Alpine镜像，Alpine版本更小巧轻量
     container_name: news_redis
     restart: unless-stopped
-    command: ["redis-server", "--appendonly", "yes"]
+    command: ["redis-server", "--appendonly", "yes"] #启用AOF持久化，确保数据不会丢失 command是覆盖默认的启动命令，使用redis-server并启用AOF持久化,参数--appendonly yes表示启用AOF持久化
     volumes:
-      - redis_data:/data
-    healthcheck:
-      test: ["CMD", "redis-cli", "ping"]
+      - redis_data:/data #持久化Redis数据
+    healthcheck: #健康检查，确保Redis服务已启动并可用
+      test: ["CMD", "redis-cli", "ping"] #test是健康检查的命令，这里使用redis-cli ping命令来检查Redis是否响应,CMD表示使用默认的shell来执行命令
       interval: 10s
       timeout: 5s
       retries: 12
@@ -71,3 +71,10 @@ services:
 volumes:
   mysql_data:
   redis_data:
+
+#使用docker-compose up -d命令启动所有服务,使用docker-compose down命令停止并删除所有服务,使用docker-compose logs -f命令查看所有服务的日志,使用docker-compose ps命令查看所有服务的状态,使用docker-compose exec <service_name> <command>命令在指定服务的容器中执行命令,如docker-compose exec db mysql -uroot -p进入MySQL容器的交互式终端
+#问题来了,我写了这样一个docker-compose.yml,我配置好了所有services,那么,镜像是什么？镜像是根据Dockerfile构建的,对于backend服务,镜像是根据backend/Dockerfile构建的,对于frontend服务,镜像是根据frontend/Dockerfile构建的,对于db和redis服务,镜像是从Docker Hub上拉取的mysql:8.0和redis:7-alpine镜像。每个服务都会有一个对应的镜像,当你运行docker-compose up命令时,Docker会根据这些配置构建或拉取相应的镜像来创建容器。
+#创建容器是不是就是在容器中根据镜像下载依赖包？不完全是。创建容器是基于镜像的过程，镜像包含了运行应用所需的文件系统和环境。当你运行docker-compose up命令时，Docker会根据docker-compose.yml中的配置来构建或拉取镜像，然后使用这些镜像来创建容器。对于backend服务，Docker会根据backend/Dockerfile构建一个新的镜像，这个Dockerfile中定义了如何安装依赖包和设置环境。对于frontend服务，Docker会根据frontend/Dockerfile构建一个新的镜像，这个Dockerfile中定义了如何安装依赖包和构建前端应用。对于db和redis服务，Docker会直接从Docker Hub上拉取现成的mysql:8.0和redis:7-alpine镜像，这些镜像已经包含了运行MySQL和Redis所需的环境和文件系统。因此，创建容器的过程是基于镜像的，而镜像的构建或拉取则是根据Dockerfile或现成镜像来完成的。
+#容器和镜像的关系是：镜像是容器的蓝图，容器是镜像的运行实例。镜像包含了应用程序和其依赖的文件系统和环境配置，而容器则是基于这个镜像创建的一个独立运行的实例。当你运行docker-compose up命令时，Docker会根据docker-compose.yml中的配置来构建或拉取相应的镜像，然后使用这些镜像来创建和启动容器。每个服务都会有一个对应的镜像，当你修改了Dockerfile或相关文件后，Docker会重新构建镜像，并在下次运行docker-compose up时使用新的镜像来创建容器。
+
+#容器和虚拟机的区别是：容器是操作系统级别的虚拟化技术，它共享宿主机的内核，但在用户空间中运行独立的应用程序和环境。虚拟机则是硬件级别的虚拟化技术，它模拟了一个完整的计算机系统，包括CPU、内存、硬盘等资源，每个虚拟机都有自己的操作系统和内核。容器启动更快，占用资源更少，适合微服务架构和快速部署的场景；虚拟机启动较慢，占用资源较多，适合需要完全隔离和独立环境的场景。

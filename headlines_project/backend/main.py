@@ -7,7 +7,10 @@ from .utils.exception_handlers import register_exception_handlers
 
 app = FastAPI()
 
-register_exception_handlers(app)
+register_exception_handlers(app) #注册全局异常处理器,如果某个接口报错,具体处理流程如下:
+#1.接口抛出异常,如HTTPException(status_code=404,detail="Not Found")
+#2.异常被FastAPI捕获!!!,根据异常类型查找对应的处理器,如http_exception_handler  
+#3.执行处理器函数,如http_exception_handler(request,exc),生成JSONResponse响应
 
 cors_origins = [
     origin.strip()

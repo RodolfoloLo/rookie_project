@@ -24,8 +24,8 @@ class User(Base):
      gender: Mapped[Optional[str]] = mapped_column(Enum('male', 'female', 'unknown' ) , comment="性别" , default='unknown')
      bio: Mapped[Optional[str]] = mapped_column(String(500), comment="个⼈简介 ", default="这个⼈很懒,什么都没留下")
      phone: Mapped[Optional[str]] = mapped_column(String(20), unique=True, comment="⼿机号")
-     created_at: Mapped[datetime] = mapped_column(DateTime, default=datetime. now, comment="创建时间")
-     updated_at: Mapped[datetime] = mapped_column(DateTime, default=datetime. now, onupdate=datetime.now)
+     created_at: Mapped[datetime] = mapped_column(DateTime, default=datetime.now, comment="创建时间")
+     updated_at: Mapped[datetime] = mapped_column(DateTime, default=datetime.now, onupdate=datetime.now)
 
      def __repr__(self):
          return f"<User(id={self.id},username='{self.username}',nickname='{self.nickname}')>"
@@ -45,7 +45,7 @@ class UserToken(Base):
     user_id:Mapped[int] = mapped_column(Integer,ForeignKey(User.id),nullable=False,comment="用户ID")
     token:Mapped[str] = mapped_column(String(255),unique=True,nullable=False,comment="令牌值")
     expires_at: Mapped[datetime] = mapped_column(DateTime, nullable=False, comment="过期时间")
-    created_at: Mapped[datetime] = mapped_column(DateTime, default=datetime.now(),comment="创建时间")
+    created_at: Mapped[datetime] = mapped_column(DateTime, default=datetime.now,comment="创建时间")
 
     def __repr__(self):
         return f"<UserToken(id={self.id},user_id={self.user_id},token='{self.token}'>"

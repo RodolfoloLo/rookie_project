@@ -36,3 +36,6 @@ class NewsDetailResponse(BaseModel):
         from_attributes=True,
         populate_by_name=True,
     )
+
+#schemas文件夹中的模型是用来定义API接口的数据结构的,可以创建实例,并且可以使用Pydantic提供的各种功能来验证和处理数据,而models文件夹中的模型是用来定义数据库表结构的,不可以创建实例
+#schemas文件夹中的类一般是用来定义请求和响应的数据结构的,而models文件夹中的类是用来定义数据库表结构的,两者的作用不同,但可以通过Pydantic的ConfigDict来实现从数据库模型到API响应模型的转换,使得代码更加简洁和高效

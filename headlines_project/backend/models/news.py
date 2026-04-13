@@ -57,5 +57,6 @@ class News(Base) :
     category_id: Mapped[int] = mapped_column(Integer, ForeignKey('news_category.id') , nullable=False, comment="分类ID")
     views: Mapped[int] = mapped_column(Integer, default=0, nullable=False, comment="浏览量")
     publish_time: Mapped[datetime] = mapped_column(DateTime, default=datetime.now, comment="发布时间")
+#datetime.now()和datetime.now的区别:datetime.now()是一个函数调用，返回当前的日期和时间，而datetime.now是一个方法对象，表示datetime类中的now方法。使用datetime.now()会执行这个方法并返回结果，而使用datetime.now则只是引用了这个方法对象本身，没有执行它。
 
     def __repr__(self) : return f"<News(id={self.id}, title='{self.title}', views={self.views})>"

@@ -8,7 +8,7 @@ from starlette import status
 
 #开发模式:返回详细错误信息
 #生产模式:返回简化错误信息
-DEBUG_MODE = os.getenv("DEBUG_MODE", "false").lower() in {"1", "true", "yes", "on"}
+DEBUG_MODE = os.getenv("DEBUG_MODE", "false").lower() in {"1", "true", "yes", "on"} #lower()表示将字符串转换为小写,方便环境变量的配置,如DEBUG_MODE=1或DEBUG_MODE=true都表示开启调试模式
 
 async def http_exception_handler(request:Request,exc:HTTPException):
     """
