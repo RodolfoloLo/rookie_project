@@ -50,8 +50,8 @@ jobs:
       - name: Build and push backend image
         uses: docker/build-push-action@v6
         with:
-          context: .
-          file: backend/Dockerfile
+          context: ./headlines_project
+          file: ./headlines_project/backend/Dockerfile
           push: true
           build-args: |
             PIP_INDEX_URL=https://pypi.org/simple
@@ -62,8 +62,8 @@ jobs:
       - name: Build and push frontend image
         uses: docker/build-push-action@v6
         with:
-          context: .
-          file: frontend/Dockerfile
+          context: ./headlines_project
+          file: ./headlines_project/frontend/Dockerfile
           push: true
           tags: |
             ${{ env.REGISTRY }}/${{ steps.vars.outputs.frontend_image }}:${{ steps.vars.outputs.tag }}
