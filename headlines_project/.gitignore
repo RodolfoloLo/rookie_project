@@ -31,6 +31,9 @@ npm-debug.log*
 yarn-debug.log*
 yarn-error.log*
 
+# Documentation drafts
+/*.md
+
 # IDE
 .vscode/
 .idea/
